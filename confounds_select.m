@@ -15,7 +15,7 @@ function noise_vars = confounds_select(confounds_tsv)
         unsteady = strfind(fields, 'non_steady_state_outlier'); unsteady = cellfun(@(x) ~isempty(x), unsteady); 
         if sum(unsteady) == 0
             % 如果没有unsteady_state_outlier
-            unsteady = zeros(size(confounds_all.w_comp_cor_00,1), 0);
+            unsteady = zeros(size(aroma_index,1), 0);
         end
 
 
