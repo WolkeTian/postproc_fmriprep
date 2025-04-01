@@ -15,7 +15,7 @@ function noise_vars = confounds_select(confounds_tsv)
         unsteady = strfind(fields, 'non_steady_state_outlier'); unsteady = cellfun(@(x) ~isempty(x), unsteady); 
         if sum(unsteady) == 0
             % 如果没有unsteady_state_outlier
-            unsteady = zeros(size(aroma_index,1), 0);
+            unsteady = zeros(size(aroma_index,1), 1);
         end
 
 
@@ -29,19 +29,20 @@ function noise_vars = confounds_select(confounds_tsv)
         acompcor_index = cellfun(@(x) ~isempty(x), acompcor_index);
         disp(['基于combined mask, 解释50%方差的acompcor成份数为',num2str(sum(acompcor_index))]);
 
-%         % 得到c_compcor_index和w_compcor_index
-%         % c_compcor保留所有导出的成分，即解释50%方差的ccompcor成分
-%         ccompcor_index = strfind(fields, 'c_comp_cor');
-%         ccompcor_index = cellfun(@(x) ~isempty(x), ccompcor_index);
-%         % w_compcor保留所有导出的成分，即解释50%方差的ccompcor成分
-%         wcompcor_index = strfind(fields, 'w_comp_cor');
-%         wcompcor_index = cellfun(@(x) ~isempty(x), wcompcor_index);
+        % 得到c_compcor_index和w_compcor_index
+        % c_compcor保留所有导出的成分，即解释50%方差的ccompcor成分
+        ccompcor_index = strfind(fields, 'c_comp_cor');
+        ccompcor_index = cellfun(@(x) ~isempty(x), ccompcor_index);
+        % w_compcor保留所有导出的成分，即解释50%方差的ccompcor成分
+        wcompcor_index = strfind(fields, 'w_comp_cor');
+        wcompcor_index = cellfun(@(x) ~isempty(x), wcompcor_index);
 % 
 %         %%%% 如果w_compcor仅保留前5个成分，则启用下行
 %         temp_location = find(wcompcor_index);
 %         temp_location = temp_location(1:5);
 %         wcompcor_index = zeros(size(ccompcor_index));
 %         wcompcor_index(temp_location) = 1; % 仅保留前5
+
 % 
 %         disp(['acompcor成份数为白质',num2str(sum(wcompcor_index)), '和脑脊液', num2str(sum(ccompcor_index))]);
 %%       acompcor相关列结束
@@ -53,7 +54,20 @@ function noise_vars = confounds_select(confounds_tsv)
 %             confounds_all.w_comp_cor_03, confounds_all.w_comp_cor_04];
         %获取aroma，acompcor,不稳定状态和motion异常
         %noise_indexs_all = find(motion_outlier + unsteady + aroma_index + acompcor_index + highpass); % 在噪声变量文件中的列
-        noise_indexs_all = find(unsteady + aroma_index + acompcor_index + highpass);
+
+        % 如果是acompcor 50% 
+        % disp('按照aroma + acompcor 50% + highpass去除噪声')
+        %noise_indexs_all = find(unsteady + aroma_index + acompcor_index + highpass);
+
+        % 如果是ccompcor+wcompcor_index 50% 
+        % disp('按照aroma + ccompcor+wcompcor_index 50% + highpass去除噪声')
+        % noise_indexs_all = find(unsteady + aroma_index + wcompcor_index + ccompcor_index + highpass);
+
+        % 如果是仅aroma 50%，也不滤波
+        disp('近按照ICA-aroma和去除unsteady点')
+        noise_indexs_all = find(unsteady + aroma_index);
+
+
         noise_all = zeros(size(confounds_all.global_signal, 1), numel(noise_indexs_all));
         for n = 1:numel(noise_indexs_all)
             noise_all(:, n) = eval(['confounds_all.', fields{noise_indexs_all(n)}]);
